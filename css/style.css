@@ -384,6 +384,18 @@ button { font-family: inherit; cursor: pointer; border: none; background: none; 
     );
 }
 
+/* ─── Special: Section 4 (Lãnh tụ) — preserve full portrait ─── */
+#reveal-4 img {
+    object-fit: contain;
+    object-position: center center;
+    background: var(--c-bg);
+    transform: scale(1.08);
+}
+
+#reveal-4.revealed img {
+    transform: scale(1.0);
+}
+
 /* Image shine sweep */
 .story__image-wrap::after {
     content: '';

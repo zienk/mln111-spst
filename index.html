@@ -3,237 +3,220 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="A cinematic storytelling experience with scroll-driven animations, parallax effects, and immersive visuals.">
-    <title>The Enchanted Journey — A Visual Story</title>
+    <meta name="description" content="Vai trò của cá nhân, quần chúng nhân dân và lãnh tụ trong lịch sử — MLN111 Nhóm 9">
+    <title>Ai Làm Nên Lịch Sử? — MLN111</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Be+Vietnam+Pro:wght@200;300;400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Stylesheets -->
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <!-- Three.js Canvas Container -->
-    <div id="three-canvas-container"></div>
+    <!-- Three.js Canvas -->
+    <canvas id="three-canvas"></canvas>
 
-    <!-- Progress Bar -->
-    <div id="scroll-progress">
-        <div id="scroll-progress-bar"></div>
-    </div>
+    <!-- Scroll Progress -->
+    <div id="scroll-progress"><div id="scroll-bar"></div></div>
 
-    <!-- Navigation Dots -->
-    <nav id="nav-dots" aria-label="Section navigation">
-        <button class="nav-dot active" data-section="0" aria-label="Go to Hero section"></button>
-        <button class="nav-dot" data-section="1" aria-label="Go to Chapter 1"></button>
-        <button class="nav-dot" data-section="2" aria-label="Go to Chapter 2"></button>
-        <button class="nav-dot" data-section="3" aria-label="Go to Finale"></button>
+    <!-- Navigation -->
+    <nav id="side-nav" aria-label="Section navigation">
+        <div class="nav-label">Scroll</div>
+        <div class="nav-track">
+            <button class="nav-dot active" data-index="0" aria-label="Mở đầu"><span>Mở đầu</span></button>
+            <button class="nav-dot" data-index="1" aria-label="Cá nhân"><span>Cá nhân</span></button>
+            <button class="nav-dot" data-index="2" aria-label="Xã hội"><span>Xã hội</span></button>
+            <button class="nav-dot" data-index="3" aria-label="Quần chúng"><span>Quần chúng</span></button>
+            <button class="nav-dot" data-index="4" aria-label="Lãnh tụ"><span>Lãnh tụ</span></button>
+            <button class="nav-dot" data-index="5" aria-label="Kết luận"><span>Kết luận</span></button>
+        </div>
     </nav>
 
-    <!-- ═══════════════════════════════════════════ -->
-    <!-- SECTION 0 — HERO / OPENING -->
-    <!-- ═══════════════════════════════════════════ -->
-    <section id="hero" class="story-section hero-section">
-        <div class="hero-overlay"></div>
-        <div class="hero-content">
-            <div class="hero-subtitle stagger-item" data-delay="0">✦ A Visual Journey ✦</div>
-            <h1 class="hero-title">
-                <span class="title-line stagger-item" data-delay="1">The</span>
-                <span class="title-line stagger-item" data-delay="2">Enchanted</span>
-                <span class="title-line stagger-item" data-delay="3">Forest</span>
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- HERO — Opening -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <section class="section section--hero" data-section="0">
+        <div class="hero__bg">
+            <div class="hero__grain"></div>
+        </div>
+        <div class="hero__content">
+            <div class="hero__tag anim-item" data-delay="0">MLN111 — Nhóm 9</div>
+            <h1 class="hero__title">
+                <span class="line anim-item" data-delay="1">Ai</span>
+                <span class="line line--accent anim-item" data-delay="2">Làm Nên</span>
+                <span class="line anim-item" data-delay="3">Lịch Sử?</span>
             </h1>
-            <p class="hero-description stagger-item" data-delay="4">
-                Scroll down to begin your journey through the ancient woods
+            <p class="hero__sub anim-item" data-delay="4">
+                Vai trò của cá nhân, quần chúng nhân dân và lãnh tụ
             </p>
-            <div class="scroll-indicator stagger-item" data-delay="5">
-                <div class="scroll-mouse">
-                    <div class="scroll-wheel"></div>
-                </div>
-                <span>Scroll to explore</span>
+            <div class="hero__scroll anim-item" data-delay="5">
+                <div class="scroll-line"></div>
+                <span>Cuộn xuống để khám phá</span>
             </div>
         </div>
     </section>
 
-    <!-- ═══════════════════════════════════════════ -->
-    <!-- SECTION 1 — CHAPTER ONE: THE GOLDEN MEADOW -->
-    <!-- ═══════════════════════════════════════════ -->
-    <section id="chapter-1" class="story-section chapter-section">
-        <div class="chapter-header">
-            <span class="chapter-number stagger-item" data-delay="0">Chapter I</span>
-            <h2 class="chapter-title stagger-item" data-delay="1">The Golden Meadow</h2>
-            <div class="chapter-divider stagger-item" data-delay="2">
-                <span class="divider-line"></span>
-                <span class="divider-diamond">◆</span>
-                <span class="divider-line"></span>
-            </div>
-        </div>
-
-        <!-- Image Reveal Block -->
-        <div class="image-reveal-container parallax-layer" data-speed="0.15">
-            <div class="image-reveal" id="reveal-1">
-                <div class="image-reveal-mask">
-                    <img src="assets/images/scene1.jpg" alt="The Golden Meadow — sunlight streaming through ancient trees" class="reveal-image" loading="lazy">
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 1 — Cá nhân -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <section class="section section--story" data-section="1" id="sec-canhan">
+        <!-- Fullscreen Image -->
+        <div class="story__image-wrap">
+            <div class="story__image parallax-img" data-speed="0.12">
+                <div class="image-reveal-mask" id="reveal-1">
+                    <img src="assets/images/s1.jpg" alt="Một cá nhân đứng một mình">
                 </div>
             </div>
+            <div class="story__image-overlay"></div>
         </div>
 
-        <!-- Story Cards with Stagger -->
-        <div class="story-cards">
-            <div class="story-card stagger-item" data-delay="0">
-                <div class="card-accent"></div>
-                <h3 class="card-title">Ánh Sáng Đầu Tiên</h3>
-                <p class="card-text">
-                    Trong khu rừng cổ xưa, ánh sáng vàng xuyên qua tán lá tạo nên những vệt sáng huyền ảo. 
-                    Mỗi tia nắng như kể một câu chuyện từ ngàn năm trước.
-                </p>
-            </div>
-            <div class="story-card stagger-item" data-delay="1">
-                <div class="card-accent"></div>
-                <h3 class="card-title">Cây Cổ Thụ</h3>
-                <p class="card-text">
-                    Cây đại thụ đứng sừng sững giữa cánh đồng, cành lá vươn xa như vòng tay ôm trọn 
-                    bầu trời. Chiếc xích đu nhỏ lắc lư trong gió.
-                </p>
-            </div>
-            <div class="story-card stagger-item" data-delay="2">
-                <div class="card-accent"></div>
-                <h3 class="card-title">Đom Đóm Bay</h3>
-                <p class="card-text">
-                    Khi hoàng hôn buông xuống, hàng ngàn đom đóm thắp sáng cánh đồng cỏ, 
-                    tạo nên một bầu trời sao thứ hai ngay dưới mặt đất.
-                </p>
-            </div>
-        </div>
-
-        <!-- Parallax Quote -->
-        <div class="parallax-quote parallax-layer" data-speed="-0.1">
-            <blockquote class="story-quote stagger-item" data-delay="0">
-                <span class="quote-mark">"</span>
-                <p>Thiên nhiên không vội vã, nhưng mọi thứ đều được hoàn thành.</p>
-                <footer>— Lão Tử</footer>
-            </blockquote>
+        <!-- Floating Caption -->
+        <div class="story__caption">
+            <span class="caption__index anim-item" data-delay="0">01</span>
+            <div class="caption__divider anim-item" data-delay="1"></div>
+            <h2 class="caption__title anim-item" data-delay="2">Cá Nhân</h2>
+            <p class="caption__text anim-item" data-delay="3">
+                "Một cá nhân có thể thay đổi tất cả?"
+            </p>
+            <p class="caption__desc anim-item" data-delay="4">
+                Mỗi con người là một thực thể độc lập với tư duy, khát vọng và năng lực riêng. 
+                Nhưng liệu một cá nhân đơn lẻ có đủ sức mạnh để viết nên lịch sử?
+            </p>
         </div>
     </section>
 
-    <!-- ═══════════════════════════════════════════ -->
-    <!-- SECTION 2 — CHAPTER TWO: THE DEEP FOREST -->
-    <!-- ═══════════════════════════════════════════ -->
-    <section id="chapter-2" class="story-section chapter-section">
-        <div class="chapter-header">
-            <span class="chapter-number stagger-item" data-delay="0">Chapter II</span>
-            <h2 class="chapter-title stagger-item" data-delay="1">The Deep Forest</h2>
-            <div class="chapter-divider stagger-item" data-delay="2">
-                <span class="divider-line"></span>
-                <span class="divider-diamond">◆</span>
-                <span class="divider-line"></span>
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 2 — Xã hội -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <section class="section section--story section--reverse" data-section="2" id="sec-xahoi">
+        <div class="story__image-wrap">
+            <div class="story__image parallax-img" data-speed="0.15">
+                <div class="image-reveal-mask" id="reveal-2">
+                    <img src="assets/images/s2.jpg" alt="Đám đông xã hội">
+                </div>
             </div>
+            <div class="story__image-overlay"></div>
         </div>
 
-        <!-- Cinematic Full-Width Image with Zoom -->
-        <div class="cinematic-image-wrapper">
-            <div class="cinematic-image parallax-layer" data-speed="0.2" id="cinematic-1">
-                <img src="assets/images/scene2.jpg" alt="Deep enchanted forest with deer and mystical light" loading="lazy">
-                <div class="cinematic-overlay"></div>
-                <div class="cinematic-caption stagger-item" data-delay="0">
-                    <span class="caption-tag">Khu Rừng Sâu</span>
-                    <h3>Nơi Ánh Sáng Gặp Bóng Tối</h3>
-                </div>
-            </div>
-        </div>
-
-        <!-- Split Content Layout -->
-        <div class="split-content">
-            <div class="split-left parallax-layer" data-speed="0.08">
-                <div class="split-image-container">
-                    <div class="image-reveal" id="reveal-2">
-                        <div class="image-reveal-mask">
-                            <img src="assets/images/scene2.jpg" alt="Mystical deer in the forest" class="reveal-image" loading="lazy">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="split-right">
-                <div class="split-text-block stagger-item" data-delay="0">
-                    <span class="text-tag">Khám phá</span>
-                    <h3>Sinh Vật Huyền Bí</h3>
-                    <p>
-                        Sâu trong rừng già, những chú hươu thanh lịch bước đi giữa rêu phong và dương xỉ cổ đại. 
-                        Bướm phát quang bay lượn xung quanh như những tinh linh nhỏ bé canh giữ khu rừng.
-                    </p>
-                </div>
-                <div class="split-text-block stagger-item" data-delay="1">
-                    <span class="text-tag">Bí ẩn</span>
-                    <h3>Dòng Suối Phát Sáng</h3>
-                    <p>
-                        Dòng suối chảy qua những tảng đá phủ rêu, nước trong vắt phản chiếu ánh sáng xanh huyền ảo. 
-                        Người ta nói rằng uống một ngụm nước từ suối sẽ nhìn thấy được quá khứ.
-                    </p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Horizontal Scroll Gallery -->
-        <div class="gallery-section">
-            <h3 class="gallery-title stagger-item" data-delay="0">Những Khoảnh Khắc</h3>
-            <div class="gallery-track" id="gallery-track">
-                <div class="gallery-item hover-scale">
-                    <img src="assets/images/scene1.jpg" alt="Gallery moment 1" loading="lazy">
-                    <div class="gallery-item-overlay">
-                        <span>Bình Minh</span>
-                    </div>
-                </div>
-                <div class="gallery-item hover-scale">
-                    <img src="assets/images/scene2.jpg" alt="Gallery moment 2" loading="lazy">
-                    <div class="gallery-item-overlay">
-                        <span>Hoàng Hôn</span>
-                    </div>
-                </div>
-                <div class="gallery-item hover-scale">
-                    <img src="assets/images/scene1.jpg" alt="Gallery moment 3" loading="lazy">
-                    <div class="gallery-item-overlay">
-                        <span>Đêm Huyền Ảo</span>
-                    </div>
-                </div>
-                <div class="gallery-item hover-scale">
-                    <img src="assets/images/scene2.jpg" alt="Gallery moment 4" loading="lazy">
-                    <div class="gallery-item-overlay">
-                        <span>Rạng Đông</span>
-                    </div>
-                </div>
-            </div>
+        <div class="story__caption">
+            <span class="caption__index anim-item" data-delay="0">02</span>
+            <div class="caption__divider anim-item" data-delay="1"></div>
+            <h2 class="caption__title anim-item" data-delay="2">Xã Hội</h2>
+            <p class="caption__text anim-item" data-delay="3">
+                "Hay xã hội mới là nền tảng quyết định?"
+            </p>
+            <p class="caption__desc anim-item" data-delay="4">
+                Con người không tồn tại cô lập. Xã hội với những mối quan hệ phức tạp, 
+                những quy luật khách quan — chính là môi trường định hình mọi cá nhân.
+            </p>
         </div>
     </section>
 
-    <!-- ═══════════════════════════════════════════ -->
-    <!-- SECTION 3 — FINALE -->
-    <!-- ═══════════════════════════════════════════ -->
-    <section id="finale" class="story-section finale-section">
-        <div class="finale-content">
-            <div class="finale-ornament stagger-item" data-delay="0">❋</div>
-            <h2 class="finale-title">
-                <span class="stagger-item" data-delay="1">Hành trình</span>
-                <span class="stagger-item" data-delay="2">chưa kết thúc...</span>
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 3 — Quần chúng nhân dân -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <section class="section section--story" data-section="3" id="sec-quanchung">
+        <div class="story__image-wrap">
+            <div class="story__image parallax-img" data-speed="0.18">
+                <div class="image-reveal-mask" id="reveal-3">
+                    <img src="assets/images/s3.jpg" alt="Quần chúng nhân dân">
+                </div>
+            </div>
+            <div class="story__image-overlay"></div>
+        </div>
+
+        <div class="story__caption">
+            <span class="caption__index anim-item" data-delay="0">03</span>
+            <div class="caption__divider anim-item" data-delay="1"></div>
+            <h2 class="caption__title anim-item" data-delay="2">Quần Chúng Nhân Dân</h2>
+            <p class="caption__text anim-item" data-delay="3">
+                "Quần chúng — lực lượng tạo ra lịch sử"
+            </p>
+            <p class="caption__desc anim-item" data-delay="4">
+                Theo quan điểm duy vật lịch sử, quần chúng nhân dân là chủ thể sáng tạo chân chính của lịch sử. 
+                Họ là lực lượng sản xuất cơ bản, là động lực của mọi cuộc cách mạng xã hội.
+            </p>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 4 — Lãnh tụ -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <section class="section section--story section--reverse" data-section="4" id="sec-lanhtu">
+        <div class="story__image-wrap">
+            <div class="story__image parallax-img" data-speed="0.1">
+                <div class="image-reveal-mask" id="reveal-4">
+                    <img src="assets/images/s4.jpg" alt="Lãnh tụ">
+                </div>
+            </div>
+            <div class="story__image-overlay"></div>
+        </div>
+
+        <div class="story__caption">
+            <span class="caption__index anim-item" data-delay="0">04</span>
+            <div class="caption__divider anim-item" data-delay="1"></div>
+            <h2 class="caption__title anim-item" data-delay="2">Lãnh Tụ</h2>
+            <p class="caption__text anim-item" data-delay="3">
+                "Lãnh tụ — người định hướng"
+            </p>
+            <p class="caption__desc anim-item" data-delay="4">
+                Lãnh tụ là người có trí tuệ vượt trội, nắm bắt được quy luật khách quan, 
+                thể hiện nguyện vọng của quần chúng và có khả năng tổ chức, dẫn dắt phong trào cách mạng.
+            </p>
+        </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════ -->
+    <!-- SECTION 5 — Kết luận (QUAN TRỌNG) -->
+    <!-- ══════════════════════════════════════════════════ -->
+    <section class="section section--finale" data-section="5" id="sec-ketluan">
+        <!-- Full background image -->
+        <div class="finale__bg">
+            <div class="finale__bg-img parallax-img" data-speed="0.08">
+                <div class="image-reveal-mask" id="reveal-5">
+                    <img src="assets/images/s5.jpg" alt="Lãnh tụ và quần chúng">
+                </div>
+            </div>
+            <div class="finale__bg-overlay"></div>
+        </div>
+
+        <div class="finale__content">
+            <div class="finale__ornament anim-item" data-delay="0">
+                <svg width="60" height="60" viewBox="0 0 60 60" fill="none">
+                    <circle cx="30" cy="30" r="28" stroke="currentColor" stroke-width="0.5" opacity="0.4"/>
+                    <circle cx="30" cy="30" r="18" stroke="currentColor" stroke-width="0.5" opacity="0.3"/>
+                    <circle cx="30" cy="30" r="4" fill="currentColor" opacity="0.6"/>
+                </svg>
+            </div>
+            <h2 class="finale__title">
+                <span class="anim-item" data-delay="1">Lịch sử =</span>
+                <span class="finale__highlight anim-item" data-delay="2">Quần chúng quyết định</span>
+                <span class="anim-item" data-delay="3">+ Lãnh tụ dẫn dắt</span>
             </h2>
-            <p class="finale-text stagger-item" data-delay="3">
-                Mỗi bước chân trong rừng già là một câu chuyện mới.<br>
-                Hãy tiếp tục khám phá và để thiên nhiên kể cho bạn nghe.
+            <div class="finale__divider anim-item" data-delay="4"></div>
+            <p class="finale__text anim-item" data-delay="5">
+                Quần chúng nhân dân là lực lượng quyết định sự phát triển của lịch sử. 
+                Lãnh tụ là người dẫn dắt, định hướng — nhưng không thể tách rời khỏi quần chúng. 
+                Sự kết hợp biện chứng giữa vai trò quần chúng và lãnh tụ 
+                chính là động lực thúc đẩy tiến trình lịch sử.
             </p>
-            <div class="finale-cta stagger-item" data-delay="4">
-                <button class="cta-button" id="restart-btn">
-                    <span>↑ Quay về đầu trang</span>
+            <div class="finale__cta anim-item" data-delay="6">
+                <button class="btn-restart" id="btn-top">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 16V4M10 4L4 10M10 4L16 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                    <span>Quay về đầu trang</span>
                 </button>
             </div>
         </div>
     </section>
 
-    <!-- Scripts — CDN -->
+    <!-- CDN Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="https://unpkg.com/lenis@1.1.1/dist/lenis.min.js"></script>
-
-    <!-- App -->
     <script src="js/app.js"></script>
 </body>
 </html>

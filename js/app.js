@@ -44,18 +44,58 @@
         const sections = fpGetSections();
         if (index < 0 || index >= sections.length || fpIsAnimating) return;
         fpIsAnimating = true;
-        fpCurrentIndex = index;
 
+        const prevIndex = fpCurrentIndex;
+        fpCurrentIndex = index;
+        const direction = index > prevIndex ? 1 : -1; // 1 = down, -1 = up
+
+        const currentSection = sections[prevIndex];
         const target = sections[index].offsetTop;
 
-        gsap.to(window, {
-            scrollTo: { y: target, autoKill: false },
-            duration: FP_DURATION,
-            ease: 'power3.inOut',
+        // ── EXIT ANIMATION on current section ──
+        const exitElements = currentSection.querySelectorAll(
+            '.caption__title, .caption__text, .caption__desc, .caption__index, .caption__divider, ' +
+            '.hero__content, .finale__content'
+        );
+        const exitImage = currentSection.querySelector('.story__image-wrap, .finale__bg');
+
+        const exitTl = gsap.timeline({
             onComplete: function() {
-                setTimeout(function() { fpIsAnimating = false; }, FP_COOLDOWN - FP_DURATION * 1000);
-            },
+                // ── SCROLL to target section ──
+                gsap.to(window, {
+                    scrollTo: { y: target, autoKill: false },
+                    duration: FP_DURATION,
+                    ease: 'power3.inOut',
+                    onComplete: function() {
+                        // Reset exit elements so they can re-enter
+                        gsap.set(exitElements, { clearProps: 'all' });
+                        if (exitImage) gsap.set(exitImage, { clearProps: 'opacity,scale' });
+                        setTimeout(function() { fpIsAnimating = false; }, 200);
+                    },
+                });
+            }
         });
+
+        // Fade + slide text out
+        if (exitElements.length > 0) {
+            exitTl.to(exitElements, {
+                opacity: 0,
+                y: -30 * direction,
+                duration: 0.35,
+                stagger: 0.03,
+                ease: 'power2.in',
+            }, 0);
+        }
+
+        // Slight fade on image
+        if (exitImage) {
+            exitTl.to(exitImage, {
+                opacity: 0.3,
+                scale: 0.97,
+                duration: 0.4,
+                ease: 'power2.in',
+            }, 0);
+        }
     }
 
     // Block ALL native scrolling

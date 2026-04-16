@@ -28,23 +28,81 @@
     }
 
     /* ═══════════════════════════════════════════════════════
-       1. LENIS SMOOTH SCROLL
+       1. FULLPAGE SCROLL SETUP
+       No Lenis — we control all scrolling via GSAP
        ═══════════════════════════════════════════════════════ */
-    const lenis = new Lenis({
-        duration: 1.6,
-        easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-        orientation: 'vertical',
-        smoothWheel: true,
-        wheelMultiplier: 0.85,
-        touchMultiplier: 1.8,
+    let fpCurrentIndex = 0;
+    let fpIsAnimating = false;
+    const FP_DURATION = 1.0;  // seconds for scroll animation
+    const FP_COOLDOWN = 800;  // ms total lockout between scrolls
+
+    function fpGetSections() {
+        return document.querySelectorAll('.section');
+    }
+
+    function fpGoTo(index) {
+        const sections = fpGetSections();
+        if (index < 0 || index >= sections.length || fpIsAnimating) return;
+        fpIsAnimating = true;
+        fpCurrentIndex = index;
+
+        const target = sections[index].offsetTop;
+
+        gsap.to(window, {
+            scrollTo: { y: target, autoKill: false },
+            duration: FP_DURATION,
+            ease: 'power3.inOut',
+            onComplete: function() {
+                setTimeout(function() { fpIsAnimating = false; }, FP_COOLDOWN - FP_DURATION * 1000);
+            },
+        });
+    }
+
+    // Block ALL native scrolling
+    window.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        if (fpIsAnimating) return;
+        if (e.deltaY > 0) fpGoTo(fpCurrentIndex + 1);
+        else if (e.deltaY < 0) fpGoTo(fpCurrentIndex - 1);
+    }, { passive: false, capture: true });
+
+    // Touch support
+    let fpTouchY = 0;
+    window.addEventListener('touchstart', function(e) {
+        fpTouchY = e.touches[0].clientY;
+    }, { passive: true });
+    window.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+    }, { passive: false });
+    window.addEventListener('touchend', function(e) {
+        if (fpIsAnimating) return;
+        var diff = fpTouchY - e.changedTouches[0].clientY;
+        if (diff > 40) fpGoTo(fpCurrentIndex + 1);
+        else if (diff < -40) fpGoTo(fpCurrentIndex - 1);
+    }, { passive: true });
+
+    // Keyboard
+    window.addEventListener('keydown', function(e) {
+        if (fpIsAnimating) return;
+        if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+            e.preventDefault(); fpGoTo(fpCurrentIndex + 1);
+        } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+            e.preventDefault(); fpGoTo(fpCurrentIndex - 1);
+        } else if (e.key === 'Home') {
+            e.preventDefault(); fpGoTo(0);
+        } else if (e.key === 'End') {
+            e.preventDefault(); fpGoTo(fpGetSections().length - 1);
+        }
     });
 
-    lenis.on('scroll', ScrollTrigger.update);
-
-    gsap.ticker.add((time) => {
-        lenis.raf(time * 1000);
-    });
-    gsap.ticker.lagSmoothing(0);
+    // Detect starting section
+    (function() {
+        var sections = fpGetSections();
+        var st = window.scrollY;
+        for (var i = sections.length - 1; i >= 0; i--) {
+            if (st >= sections[i].offsetTop - 50) { fpCurrentIndex = i; break; }
+        }
+    })();
 
     /* ═══════════════════════════════════════════════════════
        2. THREE.JS — Floating Particles Background
@@ -234,7 +292,7 @@
         navDots.forEach((dot) => {
             dot.addEventListener('click', () => {
                 const idx = parseInt(dot.dataset.index);
-                lenis.scrollTo(allSections[idx], { duration: 2.2, offset: 0 });
+                fpGoTo(idx);
             });
         });
 
@@ -375,7 +433,7 @@
         const btnTop = document.getElementById('btn-top');
         if (btnTop) {
             btnTop.addEventListener('click', () => {
-                lenis.scrollTo(0, { duration: 3 });
+                fpGoTo(0);
             });
         }
     }

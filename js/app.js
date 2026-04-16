@@ -105,13 +105,59 @@
     })();
 
     /* ═══════════════════════════════════════════════════════
-       2. THREE.JS — Floating Particles Background
+       2. THREE.JS — Floating Star Particles Background
        ═══════════════════════════════════════════════════════ */
     const canvas = document.getElementById('three-canvas');
     let scene, camera, renderer;
     let particleSystem, dustSystem;
     let mouseX = 0, mouseY = 0;
     let scrollY = 0;
+
+    /* Generate a glowing star texture via Canvas */
+    function createStarTexture(size, points, color) {
+        const sz = size || 64;
+        const cv = document.createElement('canvas');
+        cv.width = sz;
+        cv.height = sz;
+        const ctx = cv.getContext('2d');
+        const cx = sz / 2;
+        const cy = sz / 2;
+        const outerR = sz * 0.42;
+        const innerR = outerR * 0.38;
+        const pts = points || 5;
+
+        // Soft glow behind the star
+        const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR * 1.3);
+        glow.addColorStop(0, (color || 'rgba(221,200,142,') + '0.5)');
+        glow.addColorStop(0.4, (color || 'rgba(221,200,142,') + '0.15)');
+        glow.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, sz, sz);
+
+        // Draw star shape
+        ctx.beginPath();
+        for (let i = 0; i < pts * 2; i++) {
+            const r = i % 2 === 0 ? outerR : innerR;
+            const angle = (Math.PI / pts) * i - Math.PI / 2;
+            const x = cx + Math.cos(angle) * r;
+            const y = cy + Math.sin(angle) * r;
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+
+        // Fill star with gradient
+        const starGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, outerR);
+        starGrad.addColorStop(0, '#fffbe6');
+        starGrad.addColorStop(0.5, color ? color.replace('rgba', '').slice(0, -1) : '#ddc88e');
+        starGrad.addColorStop(1, '#c4a35a');
+        ctx.fillStyle = starGrad;
+        ctx.fill();
+
+        const tex = new THREE.CanvasTexture(cv);
+        tex.needsUpdate = true;
+        return tex;
+    }
 
     function initThree() {
         scene = new THREE.Scene();
@@ -139,7 +185,7 @@
         });
     }
 
-    /* Ambient particles — gold dust */
+    /* Ambient particles — gold stars */
     function createParticles() {
         const count = 800;
         const geo = new THREE.BufferGeometry();
@@ -167,11 +213,14 @@
         geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
         geo.setAttribute('color', new THREE.BufferAttribute(cols, 3));
 
+        const starTex = createStarTexture(64, 5);
+
         const mat = new THREE.PointsMaterial({
-            size: 0.8,
+            size: 1.5,
+            map: starTex,
             vertexColors: true,
             transparent: true,
-            opacity: 0.2,
+            opacity: 0.35,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
             sizeAttenuation: true,
@@ -181,7 +230,7 @@
         scene.add(particleSystem);
     }
 
-    /* Floating dust motes — larger, fewer, dreamy */
+    /* Floating dust motes — larger stars, fewer, dreamy */
     const dustData = [];
     function createDust() {
         const count = 30;
@@ -207,11 +256,14 @@
 
         geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
 
+        const starTex = createStarTexture(128, 5);
+
         const mat = new THREE.PointsMaterial({
-            size: 3.5,
+            size: 5.0,
+            map: starTex,
             color: col,
             transparent: true,
-            opacity: 0.35,
+            opacity: 0.45,
             blending: THREE.AdditiveBlending,
             depthWrite: false,
             sizeAttenuation: true,
@@ -350,6 +402,11 @@
             const items = section.querySelectorAll('.anim-item');
 
             items.forEach((item) => {
+                // Skip typewriter elements — they have their own animation
+                if (item.classList.contains('caption__text') || item.classList.contains('caption__desc')) {
+                    return;
+                }
+
                 const delay = parseInt(item.dataset.delay) * 0.18;
                 const xStart = item.classList.contains('caption__desc') ? 0 : 0;
                 const yStart = parseFloat(getComputedStyle(item).transform.split(',')[5]) || 40;
@@ -397,6 +454,65 @@
                     }
                 );
             });
+        });
+
+        /* ─── TYPEWRITER EFFECT ─── */
+        function typewriter(el, speed, delay) {
+            const originalText = el.getAttribute('data-original-text') || el.textContent.trim();
+            el.setAttribute('data-original-text', originalText);
+            el.textContent = '';
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+            el.classList.add('typing');
+
+            let i = 0;
+            const timer = setTimeout(function startType() {
+                const typeInterval = setInterval(function() {
+                    if (i < originalText.length) {
+                        el.textContent += originalText.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typeInterval);
+                        el.classList.remove('typing');
+                        el.classList.add('typed');
+                    }
+                }, speed);
+            }, delay);
+
+            // Store timer reference for cleanup
+            el._typeTimer = timer;
+        }
+
+        function resetTypewriter(el) {
+            if (el._typeTimer) clearTimeout(el._typeTimer);
+            el.textContent = '';
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.classList.remove('typing', 'typed');
+        }
+
+        // Apply typewriter to caption texts & descriptions
+        document.querySelectorAll('.section--story, .section--finale').forEach((section) => {
+            const quoteEl = section.querySelector('.caption__text, .finale__text');
+            const descEl = section.querySelector('.caption__desc');
+
+            if (quoteEl) {
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: 'top 60%',
+                    onEnter: () => typewriter(quoteEl, 35, 400),
+                    onLeaveBack: () => resetTypewriter(quoteEl),
+                });
+            }
+
+            if (descEl) {
+                ScrollTrigger.create({
+                    trigger: section,
+                    start: 'top 60%',
+                    onEnter: () => typewriter(descEl, 18, 900),
+                    onLeaveBack: () => resetTypewriter(descEl),
+                });
+            }
         });
 
         /* ─── PARALLAX IMAGES ─── */

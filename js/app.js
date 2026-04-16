@@ -40,6 +40,134 @@
         return document.querySelectorAll('.section');
     }
 
+    /* ─── TYPEWRITER UTILITIES (outer scope) ─── */
+    function typewriterPlay(el, speed, delay) {
+        // Kill any running typewriter on this element
+        if (el._typeTimer) clearTimeout(el._typeTimer);
+        if (el._typeInterval) clearInterval(el._typeInterval);
+
+        const originalText = el.getAttribute('data-original-text') || el.textContent.trim();
+        el.setAttribute('data-original-text', originalText);
+        el.textContent = '';
+        el.style.opacity = '1';
+        el.style.transform = 'translateY(0)';
+        el.classList.remove('typed');
+        el.classList.add('typing');
+
+        let i = 0;
+        el._typeTimer = setTimeout(function() {
+            el._typeInterval = setInterval(function() {
+                if (i < originalText.length) {
+                    el.textContent += originalText.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(el._typeInterval);
+                    el._typeInterval = null;
+                    el.classList.remove('typing');
+                    el.classList.add('typed');
+                }
+            }, speed);
+        }, delay);
+    }
+
+    function typewriterReset(el) {
+        if (el._typeTimer) { clearTimeout(el._typeTimer); el._typeTimer = null; }
+        if (el._typeInterval) { clearInterval(el._typeInterval); el._typeInterval = null; }
+        el.textContent = '';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.classList.remove('typing', 'typed');
+    }
+
+    /** Manually play entry animations for a section (called after scroll completes) */
+    function fpAnimateEnter(section) {
+        // Animate .anim-item elements (titles, indexes, ornaments, etc.)
+        const items = section.querySelectorAll('.anim-item');
+        items.forEach((item) => {
+            // Skip typewriter elements — they have their own animation below
+            if (item.classList.contains('caption__text') || item.classList.contains('caption__desc') ||
+                item.classList.contains('finale__text')) {
+                return;
+            }
+            const delay = parseInt(item.dataset.delay) * 0.18;
+            const targetOpacity = item.classList.contains('caption__index') ? 0.15 : 1;
+            gsap.fromTo(item,
+                { opacity: 0, y: 40, scale: item.classList.contains('finale__ornament') ? 0.4 : 1,
+                  rotation: item.classList.contains('finale__ornament') ? -180 : 0 },
+                { opacity: targetOpacity, y: 0, scale: 1, rotation: 0,
+                  duration: 1.5, delay: delay, ease: Spring.bounce }
+            );
+        });
+
+        // Dividers (including epic__line)
+        const dividers = section.querySelectorAll('.caption__divider, .finale__divider, .epic__line');
+        dividers.forEach((div) => {
+            gsap.fromTo(div,
+                { scaleX: 0, opacity: 0 },
+                { scaleX: 1, opacity: 1, duration: 1.2, ease: Spring.smooth }
+            );
+        });
+
+        // Image reveal — handle multiple masks (e.g. dual section)
+        const masks = section.querySelectorAll('.image-reveal-mask');
+        masks.forEach((mask, i) => {
+            const wrap = mask.closest('.story__image-wrap') || mask.closest('.finale__bg') ||
+                         mask.closest('.cinematic__bg') || mask.closest('.epic__bg') ||
+                         mask.closest('.dual__image-wrap');
+            gsap.to(mask, {
+                clipPath: 'inset(0 0 0% 0)',
+                duration: 1.6,
+                delay: i * 0.2,
+                ease: Spring.smooth,
+                onComplete: () => {
+                    mask.classList.add('revealed');
+                    if (wrap) wrap.classList.add('shine');
+                }
+            });
+        });
+
+        // Typewriter for quote and desc
+        const quoteEl = section.querySelector('.caption__text, .finale__text');
+        const descEl = section.querySelector('.caption__desc');
+        if (quoteEl) typewriterPlay(quoteEl, 35, 400);
+        if (descEl) typewriterPlay(descEl, 18, 900);
+    }
+
+    /** Reset a section's elements to their initial hidden state */
+    function fpResetSection(section) {
+        const items = section.querySelectorAll('.anim-item');
+        items.forEach((item) => {
+            gsap.set(item, { opacity: 0, y: 40, scale: 1, rotation: 0 });
+        });
+        const dividers = section.querySelectorAll('.caption__divider, .finale__divider, .epic__line');
+        dividers.forEach((div) => {
+            gsap.set(div, { scaleX: 0, opacity: 0 });
+        });
+
+        // Clear inline styles on content containers & parent wrappers so they’re visible next time
+        const containers = section.querySelectorAll(
+            '.hero__content, .hero__title, .finale__content, .finale__title, ' +
+            '.cinematic__content, .epic__content, .story__caption, .dual__caption'
+        );
+        containers.forEach((c) => gsap.set(c, { clearProps: 'all' }));
+
+        // Reset ALL image masks (handles dual-image sections)
+        const masks = section.querySelectorAll('.image-reveal-mask');
+        masks.forEach((mask) => {
+            gsap.set(mask, { clipPath: 'inset(0 0 100% 0)' });
+            mask.classList.remove('revealed');
+            const wrap = mask.closest('.story__image-wrap') || mask.closest('.finale__bg') ||
+                         mask.closest('.cinematic__bg') || mask.closest('.epic__bg') ||
+                         mask.closest('.dual__image-wrap');
+            if (wrap) wrap.classList.remove('shine');
+        });
+        // Reset typewriter
+        const quoteEl = section.querySelector('.caption__text, .finale__text');
+        const descEl = section.querySelector('.caption__desc');
+        if (quoteEl) typewriterReset(quoteEl);
+        if (descEl) typewriterReset(descEl);
+    }
+
     function fpGoTo(index) {
         const sections = fpGetSections();
         if (index < 0 || index >= sections.length || fpIsAnimating) return;
@@ -50,26 +178,37 @@
         const direction = index > prevIndex ? 1 : -1; // 1 = down, -1 = up
 
         const currentSection = sections[prevIndex];
-        const target = sections[index].offsetTop;
+        const targetSection = sections[index];
+        const targetY = targetSection.offsetTop;
 
         // ── EXIT ANIMATION on current section ──
-        const exitElements = currentSection.querySelectorAll(
-            '.caption__title, .caption__text, .caption__desc, .caption__index, .caption__divider, ' +
-            '.hero__content, .finale__content'
+        // Use .anim-item to target only leaf-level animated elements,
+        // NEVER parent wrappers (h2.finale__title, h1.hero__title) which
+        // would be faded but never restored, causing invisible content.
+        const exitElements = currentSection.querySelectorAll('.anim-item');
+        const exitImage = currentSection.querySelector(
+            '.story__image-wrap, .finale__bg, .cinematic__bg, .epic__bg, .dual__images'
         );
-        const exitImage = currentSection.querySelector('.story__image-wrap, .finale__bg');
 
         const exitTl = gsap.timeline({
             onComplete: function() {
+                // Reset the exited section to initial hidden state
+                fpResetSection(currentSection);
+
                 // ── SCROLL to target section ──
                 gsap.to(window, {
-                    scrollTo: { y: target, autoKill: false },
+                    scrollTo: { y: targetY, autoKill: false },
                     duration: FP_DURATION,
                     ease: 'power3.inOut',
                     onComplete: function() {
-                        // Reset exit elements so they can re-enter
-                        gsap.set(exitElements, { clearProps: 'all' });
                         if (exitImage) gsap.set(exitImage, { clearProps: 'opacity,scale' });
+
+                        // ── ENTER ANIMATION on target section ──
+                        fpAnimateEnter(targetSection);
+
+                        // Refresh ScrollTrigger to sync state
+                        ScrollTrigger.refresh();
+
                         setTimeout(function() { fpIsAnimating = false; }, 200);
                     },
                 });
@@ -403,157 +542,10 @@
             }, d);
         });
 
-        /* ─── IMAGE REVEAL — Clip-path Mask ─── */
-        document.querySelectorAll('.image-reveal-mask').forEach((mask) => {
-            const wrap = mask.closest('.story__image-wrap') || mask.closest('.finale__bg');
-
-            ScrollTrigger.create({
-                trigger: mask.closest('.section'),
-                start: 'top 80%',
-                end: 'top 20%',
-                onEnter: () => {
-                    // Animate clip-path reveal
-                    gsap.to(mask, {
-                        clipPath: 'inset(0 0 0% 0)',
-                        duration: 1.6,
-                        ease: Spring.smooth,
-                        onComplete: () => {
-                            mask.classList.add('revealed');
-                            if (wrap) wrap.classList.add('shine');
-                        }
-                    });
-                },
-                onLeaveBack: () => {
-                    gsap.to(mask, {
-                        clipPath: 'inset(0 0 100% 0)',
-                        duration: 0.8,
-                        ease: 'power2.inOut',
-                        onComplete: () => {
-                            mask.classList.remove('revealed');
-                            if (wrap) wrap.classList.remove('shine');
-                        }
-                    });
-                },
-            });
-        });
-
-        /* ─── CAPTION STAGGER — Spring entrance ─── */
-        document.querySelectorAll('.section--story, .section--finale').forEach((section) => {
-            const items = section.querySelectorAll('.anim-item');
-
-            items.forEach((item) => {
-                // Skip typewriter elements — they have their own animation
-                if (item.classList.contains('caption__text') || item.classList.contains('caption__desc')) {
-                    return;
-                }
-
-                const delay = parseInt(item.dataset.delay) * 0.18;
-                const xStart = item.classList.contains('caption__desc') ? 0 : 0;
-                const yStart = parseFloat(getComputedStyle(item).transform.split(',')[5]) || 40;
-
-                gsap.fromTo(item,
-                    {
-                        opacity: 0,
-                        y: yStart,
-                        scale: item.dataset.delay === '0' && item.classList.contains('finale__ornament')
-                            ? 0.4 : 1,
-                        rotation: item.classList.contains('finale__ornament') ? -180 : 0,
-                    },
-                    {
-                        opacity: item.classList.contains('caption__index') ? 0.15 : 1,
-                        y: 0,
-                        scale: 1,
-                        rotation: 0,
-                        duration: 1.5,
-                        delay: delay,
-                        ease: Spring.bounce,
-                        scrollTrigger: {
-                            trigger: item,
-                            start: 'top 88%',
-                            toggleActions: 'play none none reverse',
-                        },
-                    }
-                );
-            });
-
-            // Special: divider scaleX
-            const dividers = section.querySelectorAll('.caption__divider, .finale__divider');
-            dividers.forEach((div) => {
-                gsap.fromTo(div,
-                    { scaleX: 0, opacity: 0 },
-                    {
-                        scaleX: 1,
-                        opacity: 1,
-                        duration: 1.2,
-                        ease: Spring.smooth,
-                        scrollTrigger: {
-                            trigger: div,
-                            start: 'top 88%',
-                            toggleActions: 'play none none reverse',
-                        },
-                    }
-                );
-            });
-        });
-
-        /* ─── TYPEWRITER EFFECT ─── */
-        function typewriter(el, speed, delay) {
-            const originalText = el.getAttribute('data-original-text') || el.textContent.trim();
-            el.setAttribute('data-original-text', originalText);
-            el.textContent = '';
-            el.style.opacity = '1';
-            el.style.transform = 'translateY(0)';
-            el.classList.add('typing');
-
-            let i = 0;
-            const timer = setTimeout(function startType() {
-                const typeInterval = setInterval(function() {
-                    if (i < originalText.length) {
-                        el.textContent += originalText.charAt(i);
-                        i++;
-                    } else {
-                        clearInterval(typeInterval);
-                        el.classList.remove('typing');
-                        el.classList.add('typed');
-                    }
-                }, speed);
-            }, delay);
-
-            // Store timer reference for cleanup
-            el._typeTimer = timer;
-        }
-
-        function resetTypewriter(el) {
-            if (el._typeTimer) clearTimeout(el._typeTimer);
-            el.textContent = '';
-            el.style.opacity = '0';
-            el.style.transform = 'translateY(30px)';
-            el.classList.remove('typing', 'typed');
-        }
-
-        // Apply typewriter to caption texts & descriptions
-        document.querySelectorAll('.section--story, .section--finale').forEach((section) => {
-            const quoteEl = section.querySelector('.caption__text, .finale__text');
-            const descEl = section.querySelector('.caption__desc');
-
-            if (quoteEl) {
-                ScrollTrigger.create({
-                    trigger: section,
-                    start: 'top 60%',
-                    onEnter: () => typewriter(quoteEl, 35, 400),
-                    onLeaveBack: () => resetTypewriter(quoteEl),
-                });
-            }
-
-            if (descEl) {
-                ScrollTrigger.create({
-                    trigger: section,
-                    start: 'top 60%',
-                    onEnter: () => typewriter(descEl, 18, 900),
-                    onLeaveBack: () => resetTypewriter(descEl),
-                });
-            }
-        });
+        /* ─── Animations for story/finale sections are handled by
+           fpAnimateEnter / fpResetSection (called from fpGoTo).
+           ScrollTrigger is NOT used for these to avoid conflicts
+           with the fullpage scroll system. ─── */
 
         /* ─── PARALLAX IMAGES ─── */
         document.querySelectorAll('.parallax-img').forEach((layer) => {
@@ -642,11 +634,24 @@
        BOOT
        ═══════════════════════════════════════════════════════ */
     function boot() {
+        // Pre-store original text for all typewriter target elements
+        document.querySelectorAll('.caption__text, .caption__desc, .finale__text').forEach((el) => {
+            if (!el.getAttribute('data-original-text')) {
+                el.setAttribute('data-original-text', el.textContent.trim());
+            }
+        });
+
         initThree();
         animateThree(0);
         initAnimations();
         initCursorGlow();
         initHovers();
+
+        // If starting at a non-hero section, animate it in
+        if (fpCurrentIndex > 0) {
+            const sections = fpGetSections();
+            fpAnimateEnter(sections[fpCurrentIndex]);
+        }
     }
 
     if (document.readyState === 'loading') {
